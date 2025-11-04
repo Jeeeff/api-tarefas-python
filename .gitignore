@@ -1,0 +1,17 @@
+venv/
+
+pycache/
+
+*.pyc
+
+.env
+
+tarefas.db
+
+*.sqlite
+
+.DS_Store
+
+users.json
+
+tasks.json
