@@ -10,14 +10,25 @@ from app.models import (
 
 tasks_bp = Blueprint('tasks', __name__)
 
+from flask import request
+from flask import current_app
+
+@tasks_bp.before_request
+def debug_headers():
+    # Isto roda antes de QUALQUER rota do blueprint tasks
+    current_app.logger.info(f"📬 HEADERS em {request.path}: {dict(request.headers)}")
+
 @tasks_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_tasks():
     """Lista todas as tarefas do usuário autenticado"""
-    print("🔵 GET /tasks/ - Iniciando...")
+    print("=" * 50)
+    print("🔵 GET /tasks/ CHAMADO")
+    print("=" * 50)
     try:
         user_id = get_jwt_identity()
-        print(f"🔵 User ID obtido: {user_id} (tipo: {type(user_id).__name__})")
+        print(f"🔵 User ID: {user_id} (tipo: {type(user_id).__name__})")
+        
         tasks = get_tasks_by_user(user_id)
         print(f"🔵 Tarefas encontradas: {len(tasks)}")
         
@@ -26,17 +37,21 @@ def get_tasks():
             'tasks': tasks
         }), 200
     except Exception as e:
-        print(f"❌ Erro em GET /tasks/: {e}")
+        print(f"❌ ERRO em GET /tasks/: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @tasks_bp.route('/', methods=['POST'])
 @jwt_required()
 def add_task():
     """Cria uma nova tarefa"""
-    print("🟢 POST /tasks/ - Iniciando...")
+    print("=" * 50)
+    print("🟢 POST /tasks/ CHAMADO")
+    print("=" * 50)
     try:
         user_id = get_jwt_identity()
-        print(f"🟢 User ID obtido: {user_id} (tipo: {type(user_id).__name__})")
+        print(f"🟢 User ID: {user_id} (tipo: {type(user_id).__name__})")
         
         data = request.get_json()
         print(f"🟢 Dados recebidos: {data}")
@@ -47,15 +62,15 @@ def add_task():
         
         title = data.get('title')
         description = data.get('description', '')
-        print(f"🟢 Title: {title}, Description: {description}")
+        print(f"🟢 Title: '{title}', Description: '{description}'")
         
         if not title:
             print("❌ Título não fornecido")
             return jsonify({'error': 'Título é obrigatório'}), 400
         
-        print(f"🟢 Chamando create_task({user_id}, {title}, {description})")
+        print(f"🟢 Chamando create_task({user_id}, '{title}', '{description}')")
         task = create_task(user_id, title, description)
-        print(f"🟢 Tarefa criada com sucesso: {task}")
+        print(f"🟢 Tarefa criada: {task}")
         
         return jsonify({
             'message': 'Tarefa criada com sucesso',
@@ -71,7 +86,7 @@ def add_task():
 @jwt_required()
 def get_task(task_id):
     """Busca uma tarefa específica"""
-    print(f"🔵 GET /tasks/{task_id} - Iniciando...")
+    print(f"🔵 GET /tasks/{task_id} CHAMADO")
     try:
         user_id = get_jwt_identity()
         task = get_task_by_id(task_id, user_id)
@@ -88,7 +103,7 @@ def get_task(task_id):
 @jwt_required()
 def edit_task(task_id):
     """Atualiza uma tarefa existente"""
-    print(f"🟡 PUT /tasks/{task_id} - Iniciando...")
+    print(f"🟡 PUT /tasks/{task_id} CHAMADO")
     try:
         user_id = get_jwt_identity()
         data = request.get_json()
@@ -113,7 +128,7 @@ def edit_task(task_id):
 @jwt_required()
 def remove_task(task_id):
     """Deleta uma tarefa"""
-    print(f"🔴 DELETE /tasks/{task_id} - Iniciando...")
+    print(f"🔴 DELETE /tasks/{task_id} CHAMADO")
     try:
         user_id = get_jwt_identity()
         
